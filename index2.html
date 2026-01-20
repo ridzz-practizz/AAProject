@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MediMart – Pharmacy E‑commerce Demo</title>
+  
+  <script>
+    window.adobeDataLayer = window.adobeDataLayer || [];
+  </script>
+
+  <style>
+    /* Basic reset */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Noto Sans", sans-serif; color: #1f2937; background: #f8fafc; }
+    :root {
+      --primary: #2563eb;
+      --success: #059669;
+      --danger: #dc2626;
+      --surface: #ffffff;
+      --muted: #6b7280;
+      --ring: rgba(37, 99, 235, 0.25);
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1rem; }
+
+    /* Header */
+    .site-header { position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid #e5e7eb; z-index: 50; }
+    .header-inner { display: flex; align-items: center; gap: 1rem; justify-content: space-between; padding: 0.75rem 0; }
+    .logo { font-weight: 800; font-size: 1.25rem; color: #111827; text-decoration: none; }
+    .main-nav a { margin: 0 0.5rem; color: #374151; text-decoration: none; font-weight: 600; }
+    .main-nav a:hover { color: var(--primary); }
+    .cart-btn { background: #f3f4f6; border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; border-radius: 8px; cursor: pointer; }
+    .badge { background: var(--primary); color: #fff; border-radius: 999px; padding: 0.1rem 0.45rem; margin-left: 0.35rem; font-size: 0.75rem; }
+
+    /* Hero */
+    .hero { background: linear-gradient(120deg, #e0f2fe, #eff6ff); border-bottom: 1px solid #e5e7eb; }
+    .hero-inner { display: grid; grid-template-columns: 1.2fr 0.8fr; align-items: center; gap: 2rem; padding: 2.5rem 0; }
+    .hero-text h1 { font-size: 2rem; margin: 0 0 0.75rem; }
+    .hero-text p { color: #374151; margin: 0 0 1rem; }
+    .hero-art { font-size: 3rem; text-align: right; }
+
+    /* Buttons */
+    .btn { display: inline-block; padding: 0.6rem 1rem; border-radius: 10px; text-decoration: none; font-weight: 600; cursor: pointer; border: none; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { filter: brightness(0.95); }
+    .btn-success { background: var(--success); color: #fff; }
+    .icon-btn { background: transparent; border: none; font-size: 1rem; cursor: pointer; }
+
+    /* Shop */
+    .shop-section { padding: 2rem 0; }
+    .filters { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin: 0.5rem 0 1rem; }
+    .filter-item { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9rem; }
+    .filters select, .filters input[type="search"] { padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; }
+    .filters select:focus, .filters input[type="search"]:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+
+    .products-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+    @media (max-width: 960px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 720px) { .products-grid { grid-template-columns: repeat(2, 1fr); } .hero-inner { grid-template-columns: 1fr; } .hero-art { text-align: left; } }
+    @media (max-width: 460px) { .products-grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .card img { width: 100%; height: 180px; object-fit: cover; background: #f3f4f6; }
+    .card-body { padding: 0.75rem; display: grid; gap: 0.35rem; }
+    .card-title { font-weight: 700; font-size: 1rem; margin: 0; }
+    .card-meta { color: var(--muted); font-size: 0.85rem; }
+    .price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem; }
+    .rx-pill { font-size: 0.75rem; color: #fff; background: #7c3aed; padding: 0.2rem 0.5rem; border-radius: 999px; }
+    .add-btn { margin-top: 0.35rem; background: var(--primary); color: #fff; border: none; padding: 0.5rem; border-radius: 8px; cursor: pointer; }
+    .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Cart drawer */
+    .cart-drawer { position: fixed; right: 0; top: 0; width: min(420px, 92vw); height: 100vh; background: var(--surface); border-left: 1px solid #e5e7eb; box-shadow: -8px 0 24px rgba(0,0,0,0.08); transform: translateX(100%); transition: transform 0.25s ease; display: grid; grid-template-rows: auto 1fr auto; z-index: 100; }
+    .cart-drawer.open { transform: translateX(0); }
+    .cart-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid #e5e7eb; }
+    .cart-items { padding: 0.75rem; display: grid; gap: 0.75rem; overflow: auto; }
+    .cart-item { display: grid; grid-template-columns: 1fr auto; gap: 0.35rem 0.75rem; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.6rem; }
+    .item-title { font-weight: 700; }
+    .item-meta { color: var(--muted); font-size: 0.85rem; }
+    .qty-row { display: flex; align-items: center; gap: 0.5rem; }
+    .qty-input { width: 64px; padding: 0.35rem; border: 1px solid #e5e7eb; border-radius: 8px; }
+    .remove-btn { background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 0.4rem 0.6rem; cursor: pointer; }
+    .rx-upload { display: grid; gap: 0.35rem; background: #f8fafc; border: 1px dashed #cbd5e1; padding: 0.5rem; border-radius: 8px; }
+    .rx-upload .mark-btn { background: #7c3aed; color: #fff; border: none; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; }
+    .cart-footer { border-top: 1px solid #e5e7eb; padding: 0.75rem; display: grid; gap: 0.5rem; }
+    .totals { display: flex; align-items: center; justify-content: space-between; }
+    .rx-note { color: var(--muted); font-size: 0.85rem; }
+
+    /* Contact */
+    .contact-section { padding: 2rem 0; }
+    .contact-form { background: var(--surface); border: 1px solid #e5e7eb; border-radius: 12px; padding: 1rem; display: grid; gap: 0.75rem; max-width: 760px; }
+    .form-row { display: grid; gap: 0.35rem; }
+    .form-row input, .form-row textarea { padding: 0.5rem; border: 1px solid #e5e7eb; border-radius: 8px; outline: none; }
+    .form-row input:focus, .form-row textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 4px var(--ring); }
+    .form-status { color: var(--success); }
+
+    .site-footer { border-top: 1px solid #e5e7eb; background: #f9fafb; }
+    .site-footer .container { padding: 1rem 0; }
+  </style>
+  <script src="https://assets.adobedtm.com/236ca7d75265/19fb0db0ebc3/launch-551078ac7086-development.min.js" async></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="#home" class="logo">MediMart</a>
+      <nav class="main-nav">
+        <a href="#home">Home</a>
+        <a href="#shop">Shop</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button id="cartButton" class="cart-btn" aria-label="Open cart" title="Cart">
+        🛒 <span id="cartCount" class="badge">0</span>
+      </button>
+    </div>
+  </header>
+
+  <section id="home" class="hero">
+    <div class="container hero-inner">
+      <div class="hero-text">
+        <h1>Your trusted online pharmacy</h1>
+        <p>Shop OTC medicines, wellness essentials, and healthcare devices.
+            Items marked as <strong>Prescription Required</strong> need a valid prescription to checkout.</p>
+        <a href="#shop" class="btn btn-primary">Shop Medicines</a>
+      </div>
+      <div class="hero-art" aria-hidden="true">💊🩹🧴</div>
+    </div>
+  </section>
+
+  <section id="shop" class="shop-section">
+    <div class="container">
+      <h2>Shop Products</h2>
+      <div class="filters">
+        <label class="filter-item">
+          <span>Category</span>
+          <select id="categoryFilter" aria-label="Filter by category">
+            <option value="all">All</option>
+          </select>
+        </label>
+        <label class="filter-item">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Search products (e.g., paracetamol)" />
+        </label>
+        <label class="filter-item">
+          <span>Sort</span>
+          <select id="sortSelect" aria-label="Sort products">
+            <option value="relevance">Relevance</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="name_asc">Name A→Z</option>
+            <option value="name_desc">Name Z→A</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="productsGrid" class="products-grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <h2>Contact Us</h2>
+      <p>Have questions? Send us a message.</p>
+      <form id="contactForm" class="contact-form" novalidate>
+        <div class="form-row">
+          <label for="name">Full Name*</label>
+          <input id="name" name="name" type="text" required />
+        </div>
+        <div class="form-row">
+          <label for="email">Email*</label>
+          <input id="email" name="email" type="email" required />
+        </div>
+        <div class="form-row">
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" placeholder="e.g., +91 98765 43210" />
+        </div>
+        <div class="form-row">
+          <label for="subject">Subject*</label>
+          <input id="subject" name="subject" type="text" required />
+        </div>
+        <div class="form-row">
+          <label for="message">Message*</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Send Message</button>
+        <p id="contactStatus" class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <aside id="cartDrawer" class="cart-drawer" aria-hidden="true" aria-labelledby="cartTitle">
+    <div class="cart-header">
+      <h3 id="cartTitle">Your Cart</h3>
+      <button id="closeCart" class="icon-btn" aria-label="Close cart">✖</button>
+    </div>
+    <div id="cartItems" class="cart-items"></div>
+    <div class="cart-footer">
+      <div class="totals">
+        <div>Items: <span id="totalItems">0</span></div>
+        <div>Subtotal: ₹<span id="subtotal">0.00</span></div>
+      </div>
+      <button id="checkoutBtn" class="btn btn-success">Proceed to Checkout</button>
+      <p class="rx-note">Items labeled <strong>Prescription Required</strong> need an upload before checkout.</p>
+    </div>
+  </aside>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p><strong>Disclaimer:</strong> This is a demo e‑commerce site for learning purposes only.
+          It is <em>not</em> a licensed pharmacy and does not sell or deliver medicines.
+          Always consult a qualified healthcare professional.
+          Prescription medications cannot be purchased without a valid prescription.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    // ---------- Catalog ----------
+    const products = [
+      { id: 'p1', name: 'Paracetamol 500mg Tablets', category: 'Pain Relief', price: 45.00, packSize: 'Strip of 10', unit: 'tablets', img: '', prescriptionRequired: false, stock: 120 },
+      { id: 'p2', name: 'Ibuprofen 200mg Tablets', category: 'Pain Relief', price: 60.00, packSize: 'Strip of 10', unit: 'tablets', img: '', prescriptionRequired: false, stock: 90 },
+      { id: 'p3', name: 'Cough Syrup (Dextromethorphan)', category: 'Cold & Flu', price: 120.00, packSize: '100 ml', unit: 'bottle', img: '', prescriptionRequired: false, stock: 60 },
+      { id: 'p4', name: 'Nasal Decongestant Spray', category: 'Cold & Flu', price: 199.00, packSize: '20 ml', unit: 'spray', img: '', prescriptionRequired: false, stock: 40 },
+      { id: 'p5', name: 'Cetirizine 10mg', category: 'Allergy', price: 55.00, packSize: 'Strip of 10', unit: 'tablets', img: '', prescriptionRequired: false, stock: 100 },
+      { id: 'p6', name: 'Loratadine 10mg', category: 'Allergy', price: 65.00, packSize: 'Strip of 10', unit: 'tablets', img: '', prescriptionRequired: false, stock: 80 },
+      { id: 'p7', name: 'Antacid Chewable Tablets', category: 'Digestive Health', price: 85.00, packSize: 'Bottle of 50', unit: 'tablets', img: '', prescriptionRequired: false, stock: 70 },
+      { id: 'p8', name: 'Oral Rehydration Salts (ORS)', category: 'Digestive Health', price: 25.00, packSize: '1 sachet', unit: 'sachet', img: '', prescriptionRequired: false, stock: 200 },
+      { id: 'p9', name: 'Vitamin C 1000mg', category: 'Vitamins & Supplements', price: 150.00, packSize: 'Bottle of 30', unit: 'tablets', img: '', prescriptionRequired: false, stock: 110 },
+      { id: 'p10', name: 'Daily Multivitamin', category: 'Vitamins & Supplements', price: 180.00, packSize: 'Bottle of 60', unit: 'capsules', img: '', prescriptionRequired: false, stock: 95 },
+      { id: 'p11', name: 'Hand Sanitizer (70% Alcohol)', category: 'Personal Care', price: 99.00, packSize: '200 ml', unit: 'bottle', img: '', prescriptionRequired: false, stock: 150 },
+      { id: 'p12', name: 'Antiseptic Liquid', category: 'Personal Care', price: 120.00, packSize: '250 ml', unit: 'bottle', img: '', prescriptionRequired: false, stock: 80 },
+      { id: 'p13', name: 'Adhesive Bandages', category: 'First Aid', price: 75.00, packSize: 'Box of 20', unit: 'bandages', img: '', prescriptionRequired: false, stock: 140 },
+      { id: 'p14', name: 'Antibiotic Ointment', category: 'First Aid', price: 135.00, packSize: '15 g', unit: 'tube', img: '', prescriptionRequired: false, stock: 60 },
+      { id: 'p15', name: 'Baby Diapers (M)', category: 'Baby Care', price: 499.00, packSize: 'Pack of 20', unit: 'diapers', img: '', prescriptionRequired: false, stock: 50 },
+      { id: 'p16', name: 'Baby Wipes (Aloe)', category: 'Baby Care', price: 110.00, packSize: 'Pack of 72', unit: 'wipes', img: '', prescriptionRequired: false, stock: 120 },
+      { id: 'p17', name: 'Digital Thermometer', category: 'Medical Devices', price: 299.00, packSize: '1 unit', unit: 'device', img: '', prescriptionRequired: false, stock: 75 },
+      { id: 'p18', name: 'Automatic BP Monitor', category: 'Medical Devices', price: 1999.00, packSize: '1 unit', unit: 'device', img: '', prescriptionRequired: false, stock: 30 },
+      { id: 'p19', name: 'Amoxicillin 500mg', category: 'Prescription', price: 85.00, packSize: 'Strip of 6', unit: 'capsules', img: '', prescriptionRequired: true, stock: 40 },
+      { id: 'p20', name: 'Metformin 500mg', category: 'Prescription', price: 55.00, packSize: 'Strip of 10', unit: 'tablets', img: '', prescriptionRequired: true, stock: 70 },
+      { id: 'p21', name: 'Atorvastatin 10mg', category: 'Prescription', price: 120.00, packSize: 'Strip of 10', unit: 'tablets', img: '', prescriptionRequired: true, stock: 35 },
+    ];
+
+    // ---------- State ----------
+    let filtered = [...products];
+    let cart = loadCart();
+
+    // ---------- Tracking Functions (Adobe Client Data Layer) ----------
+    function trackPageLoad() {
+      window.adobeDataLayer.push({
+        event: 'pageView',
+        page: {
+          pageName: 'MediMart: Home',
+          siteSection: 'Home',
+          pageType: 'landing'
+        }
+      });
+    }
+
+    function trackProductImpression(items) {
+      window.adobeDataLayer.push({
+        event: 'productImpression',
+        ecommerce: {
+          impressions: items.map(p => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            price: p.price,
+            prescriptionRequired: p.prescriptionRequired
+          }))
+        }
+      });
+    }
+
+    function trackSearch(term, cat, sort) {
+      window.adobeDataLayer.push({
+        event: 'internalSearch',
+        search: {
+          keyword: term,
+          category: cat,
+          sortBy: sort
+        }
+      });
+    }
+
+    function trackAddToCart(product) {
+      window.adobeDataLayer.push({
+        event: 'cartAdd',
+        ecommerce: {
+          item: {
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            category: product.category,
+            type: product.prescriptionRequired ? 'Prescription' : 'OTC'
+          }
+        }
+      });
+    }
+
+    function trackCartView() {
+      const totals = getTotals();
+      window.adobeDataLayer.push({
+        event: 'cartView',
+        cart: {
+          itemCount: totals.items,
+          subtotal: totals.subtotal,
+          items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty }))
+        }
+      });
+    }
+
+    // ---------- Elements ----------
+    const productsGrid = document.getElementById('productsGrid');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const cartButton = document.getElementById('cartButton');
+    const cartDrawer = document.getElementById('cartDrawer');
+    const cartItemsEl = document.getElementById('cartItems');
+    const cartCountEl = document.getElementById('cartCount');
+    const closeCartBtn = document.getElementById('closeCart');
+    const totalItemsEl = document.getElementById('totalItems');
+    const subtotalEl = document.getElementById('subtotal');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    const contactForm = document.getElementById('contactForm');
+    const contactStatus = document.getElementById('contactStatus');
+
+    // ---------- Init ----------
+    init();
+
+    function init() {
+      trackPageLoad();
+      
+      const categories = Array.from(new Set(products.map(p => p.category))).sort();
+      for (const cat of categories) {
+        const opt = document.createElement('option');
+        opt.value = cat; opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+      }
+
+      categoryFilter.addEventListener('change', applyFilters);
+      searchInput.addEventListener('input', applyFilters);
+      sortSelect.addEventListener('change', applyFilters);
+      cartButton.addEventListener('click', () => openCart(true));
+      closeCartBtn.addEventListener('click', () => openCart(false));
+      checkoutBtn.addEventListener('click', handleCheckout);
+      contactForm.addEventListener('submit', handleContactSubmit);
+
+      applyFilters();
+      renderCart();
+    }
+
+    function applyFilters() {
+      const term = searchInput.value.trim().toLowerCase();
+      const cat = categoryFilter.value;
+      const sortBy = sortSelect.value;
+
+      if (term) { trackSearch(term, cat, sortBy); }
+
+      filtered = products.filter(p => {
+        const matchCat = (cat === 'all') || (p.category === cat);
+        const matchTerm = !term || (p.name.toLowerCase().includes(term) || p.category.toLowerCase().includes(term));
+        return matchCat && matchTerm;
+      });
+
+      switch (sortBy) {
+        case 'price_asc': filtered.sort((a, b) => a.price - b.price); break;
+        case 'price_desc': filtered.sort((a, b) => b.price - a.price); break;
+        case 'name_asc': filtered.sort((a, b) => a.name.localeCompare(b.name)); break;
+        case 'name_desc': filtered.sort((a, b) => b.name.localeCompare(a.name)); break;
+      }
+
+      renderProducts(filtered);
+    }
+
+    function renderProducts(items) {
+      productsGrid.innerHTML = '';
+      if (!items.length) {
+        const empty = document.createElement('p');
+        empty.textContent = 'No products found.';
+        productsGrid.appendChild(empty);
+        return;
+      }
+
+      for (const p of items) {
+        const card = document.createElement('article');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="height:180px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:3rem;">📦</div>
+          <div class="card-body">
+            <h3 class="card-title">${p.name}</h3>
+            <div class="card-meta">${p.category} • ${p.packSize}</div>
+            <div class="price-row">
+              <div>₹${p.price.toFixed(2)}</div>
+              ${p.prescriptionRequired ? '<span class="rx-pill">Prescription Required</span>' : ''}
+            </div>
+            <button class="add-btn" ${p.stock <= 0 ? 'disabled' : ''}>
+              ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+            </button>
+          </div>
+        `;
+        card.querySelector('.add-btn').addEventListener('click', () => addToCart(p.id));
+        productsGrid.appendChild(card);
+      }
+      trackProductImpression(items);
+    }
+
+    function openCart(show) {
+      if (show) {
+        cartDrawer.classList.add('open');
+        cartDrawer.setAttribute('aria-hidden', 'false');
+        trackCartView();
+      } else {
+        cartDrawer.classList.remove('open');
+        cartDrawer.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    function renderCart() {
+      cartItemsEl.innerHTML = '';
+      if (!cart.length) {
+        const p = document.createElement('p');
+        p.textContent = 'Your cart is empty.';
+        cartItemsEl.appendChild(p);
+      } else {
+        for (const item of cart) {
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.innerHTML = `
+            <div>
+              <div class="item-title">${item.name}</div>
+              <div class="item-meta">${item.packSize} • ₹${item.price.toFixed(2)} each</div>
+            </div>
+            <div class="qty-row">
+              <label>Qty:</label>
+              <input type="number" class="qty-input" min="1" value="${item.qty}">
+              <button class="remove-btn">Remove</button>
+            </div>
+          `;
+          
+          if (item.prescriptionRequired) {
+            const rxDiv = document.createElement('div');
+            rxDiv.className = 'rx-upload';
+            rxDiv.innerHTML = `
+              <div>${item.rxUploaded ? 'Prescription uploaded ✔️' : 'Upload prescription to checkout'}</div>
+              ${!item.rxUploaded ? '<input type="file" accept=".jpg,.jpeg,.png,.pdf"><button class="mark-btn">Mark as uploaded</button>' : ''}
+            `;
+            if(!item.rxUploaded) {
+               rxDiv.querySelector('.mark-btn').addEventListener('click', () => markPrescriptionUploaded(item.id));
+            }
+            row.appendChild(rxDiv);
+          }
+
+          row.querySelector('.qty-input').addEventListener('change', (e) => updateQty(item.id, parseInt(e.target.value || '1', 10)));
+          row.querySelector('.remove-btn').addEventListener('click', () => removeFromCart(item.id));
+          cartItemsEl.appendChild(row);
+        }
+      }
+
+      const totals = getTotals();
+      totalItemsEl.textContent = String(totals.items);
+      subtotalEl.textContent = totals.subtotal.toFixed(2);
+      cartCountEl.textContent = String(totals.items);
+      const hasPendingRx = cart.some(ci => ci.prescriptionRequired && !ci.rxUploaded);
+      checkoutBtn.disabled = hasPendingRx || cart.length === 0;
+    }
+
+    function addToCart(productId) {
+      const p = products.find(x => x.id === productId);
+      if (!p) return;
+      const existing = cart.find(ci => ci.id === productId);
+      if (existing) existing.qty += 1;
+      else cart.push({ ...p, qty: 1, rxUploaded: false });
+
+      saveCart();
+      renderCart();
+      trackAddToCart(p);
+      openCart(true);
+    }
+
+    function updateQty(productId, qty) {
+      const item = cart.find(ci => ci.id === productId);
+      if (item) {
+        item.qty = Math.max(1, qty || 1);
+        saveCart();
+        renderCart();
+      }
+    }
+
+    function removeFromCart(productId) {
+      cart = cart.filter(ci => ci.id !== productId);
+      window.adobeDataLayer.push({ event: 'cartRemove', productId: productId });
+      saveCart();
+      renderCart();
+    }
+
+    function markPrescriptionUploaded(productId) {
+      const item = cart.find(ci => ci.id === productId);
+      if (item) {
+        item.rxUploaded = true;
+        window.adobeDataLayer.push({ event: 'rxUpload', productId: productId });
+        saveCart();
+        renderCart();
+      }
+    }
+
+    function getTotals() {
+      const items = cart.reduce((sum, ci) => sum + ci.qty, 0);
+      const subtotal = cart.reduce((sum, ci) => sum + ci.qty * ci.price, 0);
+      return { items, subtotal };
+    }
+
+    function handleCheckout() {
+      const totals = getTotals();
+      window.adobeDataLayer.push({
+        event: 'checkoutStart',
+        ecommerce: {
+          value: totals.subtotal,
+          currency: 'INR',
+          items: cart.map(i => ({ id: i.id, name: i.name, qty: i.qty }))
+        }
+      });
+      alert('Checkout simulated.');
+    }
+
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      const form = new FormData(contactForm);
+      const subject = String(form.get('subject') || '').trim();
+      if (!subject) return;
+
+      contactStatus.style.color = '#059669';
+      contactStatus.textContent = 'Message sent!';
+      window.adobeDataLayer.push({ event: 'formSubmit', formName: 'Contact Us', subject: subject });
+      contactForm.reset();
+    }
+
+    function loadCart() {
+      try { return JSON.parse(localStorage.getItem('medimart_cart') || '[]'); } 
+      catch { return []; }
+    }
+
+    function saveCart() {
+      localStorage.setItem('medimart_cart', JSON.stringify(cart));
+    }
+  </script>
+</body>
+</html>
